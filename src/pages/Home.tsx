@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LocateFixed } from 'lucide-react';
 import MapHub from '../components/Map/MapHub';
 import BottomSheet from '../components/BottomSheet/BottomSheet';
 import AdZone from '../components/AdZone/AdZone';
@@ -8,6 +8,8 @@ import type { PlaceCategory, Place } from '../data/mockPlaces';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { geocodeLocation } from '../lib/geocoder';
 import type { GeocodeResult } from '../lib/geocoder';
+import { useGeolocation } from '../hooks/useGeolocation';
+import { calculateDistance } from '../utils/haversine';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -25,6 +27,9 @@ const Home: React.FC = () => {
   // Selection UX States
   const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  // Math & Device Telemetry
+  const { location, geoError, isLocating, requestLocation, setGeoError } = useGeolocation();
 
   useEffect(() => {
     if (isSupabaseConfigured() && supabase) {
@@ -101,18 +106,53 @@ const Home: React.FC = () => {
       const q = searchQuery.toLowerCase();
       currentPlaces = currentPlaces.filter(p => p.name.toLowerCase().includes(q) || p.tags?.some(t => t.toLowerCase().includes(q)));
     }
+    
+    // Offline Haversine Sorting: Render exactly what is closest.
+    if (location) {
+      currentPlaces = [...currentPlaces].sort((a, b) => {
+        const distA = calculateDistance(location.lat, location.lng, Number(a.lat), Number(a.lng));
+        const distB = calculateDistance(location.lat, location.lng, Number(b.lat), Number(b.lng));
+        return distA - distB;
+      });
+    }
+
     return currentPlaces;
-  }, [activeCategory, searchQuery, places]);
+  }, [activeCategory, searchQuery, places, location]);
+
+  const selectedDistance = useMemo(() => {
+    if (!selectedPlace || !location) return null;
+    return calculateDistance(location.lat, location.lng, Number(selectedPlace.lat), Number(selectedPlace.lng));
+  }, [selectedPlace, location]);
 
   return (
     <div className="home-container">
-      <div className="map-placeholder">
+      <div className="map-placeholder" style={{ position: 'relative' }}>
         <MapHub 
           places={filteredPlaces} 
           centerLat={mapCenter.lat}
           centerLng={mapCenter.lng}
           onMarkerClick={setSelectedPlace} 
         />
+        
+        {/* Floating GeoLocation Button */}
+        <button 
+          className="glass shadow-sm" 
+          aria-label="Use My Location"
+          onClick={requestLocation}
+          disabled={isLocating}
+          style={{ 
+            position: 'absolute', right: '1rem', bottom: '1.5rem', zIndex: 1000, 
+            width: '44px', height: '44px', borderRadius: '50%', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            backgroundColor: location ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.85)', 
+            color: location ? 'white' : 'var(--color-text)',
+            border: '1px solid rgba(255, 255, 255, 0.4)',
+            cursor: isLocating ? 'wait' : 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          {isLocating ? <Loader2 className="spinner" size={20} /> : <LocateFixed size={20} />}
+        </button>
       </div>
       
       {/* Floating Header Actions */}
@@ -151,6 +191,13 @@ const Home: React.FC = () => {
           {searchError && (
             <div className="search-error-toast slide-down">
               {searchError}
+            </div>
+          )}
+
+          {geoError && (
+            <div className="search-error-toast slide-down" style={{ marginTop: '0.5rem', backgroundColor: '#fff3cd', color: '#856404', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>{geoError}</span>
+              <button onClick={() => setGeoError(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#856404' }}>×</button>
             </div>
           )}
       </header>
@@ -221,7 +268,7 @@ const Home: React.FC = () => {
         <AdZone type="banner-bottom" />
       </div>
 
-      <BottomSheet place={selectedPlace} onClose={() => setSelectedPlace(null)} />
+      <BottomSheet place={selectedPlace} distance={selectedDistance} onClose={() => setSelectedPlace(null)} />
     </div>
   );
 };

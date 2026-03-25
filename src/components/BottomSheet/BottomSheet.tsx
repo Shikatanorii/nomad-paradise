@@ -4,11 +4,14 @@ import './BottomSheet.css';
 
 interface BottomSheetProps {
   place: Place | null;
+  distance?: number | null;
   onClose: () => void;
 }
 
-const BottomSheet: React.FC<BottomSheetProps> = ({ place, onClose }) => {
+const BottomSheet: React.FC<BottomSheetProps> = ({ place, distance, onClose }) => {
   if (!place) return null;
+
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`;
 
   return (
     <div className="bottom-sheet glass shadow-lg slide-up">
@@ -31,6 +34,12 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ place, onClose }) => {
           )}
         </div>
         
+        {distance !== undefined && distance !== null && (
+          <div className="place-distance slide-down" style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Navigation size={14} /> Approx. {distance.toFixed(1)} miles (straight-line)
+          </div>
+        )}
+        
         <p className="place-address">{place.address}</p>
         
         <div className="place-tags">
@@ -48,10 +57,10 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ place, onClose }) => {
         )}
         
         <div className="action-grid">
-          <button className="action-btn primary">
+          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="action-btn primary" style={{ textDecoration: 'none' }}>
             <Navigation size={20} />
             <span>Directions</span>
-          </button>
+          </a>
           <button className="action-btn secondary">
             <Bookmark size={20} />
             <span>Save</span>
