@@ -132,7 +132,7 @@
 .data-status-pill {
   position: absolute;
   top: auto;
-  bottom: 1.5rem;
+  bottom: 140px; /* Safely clears the 80px tab bar + 50px ad space */
   left: 1rem;
   transform: none;
   display: flex;
