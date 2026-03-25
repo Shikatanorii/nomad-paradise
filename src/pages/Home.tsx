@@ -68,12 +68,14 @@ const Home: React.FC = () => {
         </div>
       </header>
 
-      {/* Honest Mock Data Banner */}
-      <div className="mock-banner shadow-sm slide-down" style={{ background: isSupabaseConfigured() ? 'var(--color-success)' : 'var(--color-warning)' }}>
-        <span>
-          {isLoadingDB ? 'Loading Live Data...' : isSupabaseConfigured() ? 'Live Demo: Database Connected' : 'Demo Build: Displaying Sample Data'}
+      {/* Premium Data Status Pill */}
+      <div className="data-status-pill slide-down">
+        <div className={`status-dot ${isSupabaseConfigured() ? 'live' : 'mock'}`} />
+        <span className="status-text">
+          {isLoadingDB ? 'Connecting...' : isSupabaseConfigured() ? 'Live Network' : 'Demo Mode'}
         </span>
-        <a href="/legal" className="legal-link" style={{ color: isSupabaseConfigured() ? '#fff' : 'var(--color-primary-dark)' }}>Legal / Disclaimers</a>
+        <div className="status-divider" />
+        <a href="/legal" className="status-link">Safety & Legal</a>
       </div>
 
       {/* Filter Pills */}
