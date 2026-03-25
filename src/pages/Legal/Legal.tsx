@@ -39,10 +39,11 @@ const Legal: React.FC = () => {
         </section>
 
         <section className="legal-section">
-          <h2>Data Honesty Transparency</h2>
+          <h2>Data Honesty & Third-Party APIs</h2>
           <p>
-            <strong>Version 1.0 Notice:</strong> The current build contains a mixture of curated live parameters and structured mock data.
-            Location markers, ratings, and events are represented as conceptual models and may not reflect real-time live database connections until Version 1.1.
+            <strong>Version 1.2 Notice:</strong> Nomad Paradise utilizes live connections to community data.
+            Our global search engine is strictly powered by <a href="https://nominatim.org" target="_blank" rel="noreferrer">Nominatim</a>, 
+            using mapping data sourced from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors.
           </p>
         </section>
 
