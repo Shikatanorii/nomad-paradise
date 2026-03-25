@@ -12,8 +12,11 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { calculateDistance } from '../utils/haversine';
 import './Home.css';
 
+const AVAILABLE_TAGS = ['24/7', 'Free WiFi', 'Safe Overnight', 'Cheap', 'Rest Stop'];
+
 const Home: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<PlaceCategory | 'all'>('all');
+  const [activeTags, setActiveTags] = useState<string[]>([]);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [places, setPlaces] = useState<Place[]>(mockPlaces);
@@ -97,11 +100,25 @@ const Home: React.FC = () => {
     setShowDropdown(false);
   };
 
+  const toggleTag = (tag: string) => {
+    setActiveTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
   const filteredPlaces = useMemo(() => {
     let currentPlaces = places;
     if (activeCategory !== 'all') {
       currentPlaces = currentPlaces.filter(p => p.category === activeCategory);
     }
+    
+    // Strict Utility Presets Filtering (Intersection)
+    if (activeTags.length > 0) {
+      currentPlaces = currentPlaces.filter(p => 
+        p.tags && activeTags.every(t => p.tags!.includes(t))
+      );
+    }
+
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase();
       currentPlaces = currentPlaces.filter(p => p.name.toLowerCase().includes(q) || p.tags?.some(t => t.toLowerCase().includes(q)));
@@ -262,6 +279,19 @@ const Home: React.FC = () => {
         >
           Events
         </button>
+      </div>
+
+      {/* Secondary Tag Filters */}
+      <div className="tag-filter-container slide-down" aria-label="Utility Presets">
+        {AVAILABLE_TAGS.map(tag => (
+          <button
+            key={tag}
+            className={`secondary-pill shadow-sm ${activeTags.includes(tag) ? 'active' : ''}`}
+            onClick={() => toggleTag(tag)}
+          >
+            {tag}
+          </button>
+        ))}
       </div>
 
       <div className="ad-container" style={{ position: 'absolute', bottom: '80px', width: '100%', zIndex: 1000 }}>

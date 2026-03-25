@@ -85,6 +85,50 @@
   border-color: var(--color-primary);
 }
 
+/* Secondary Tag Filtering */
+.tag-filter-container {
+  position: absolute;
+  top: calc(max(env(safe-area-inset-top), 16px) + 130px);
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tag-filter-container::-webkit-scrollbar {
+  display: none;
+}
+.secondary-pill {
+  white-space: nowrap;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.secondary-pill:hover {
+  background: white;
+  color: var(--color-text-main);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+.secondary-pill.active {
+  background: var(--color-primary-dark);
+  color: white;
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 2px 6px rgba(13, 110, 253, 0.2);
+}
+
 .data-status-pill {
   position: absolute;
   top: 1rem;
