@@ -34,9 +34,15 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ place, distance, onClose }) =
           )}
         </div>
         
-        {distance !== undefined && distance !== null && (
+        {distance !== undefined && distance !== null && place.category !== 'event' && (
           <div className="place-distance slide-down" style={{ color: 'var(--color-primary)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Navigation size={14} /> Approx. {distance.toFixed(1)} miles (straight-line)
+          </div>
+        )}
+        
+        {place.category === 'event' && place.date && (
+          <div className="place-distance slide-down" style={{ color: 'var(--color-warning)', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            📅 {place.date}
           </div>
         )}
         
@@ -57,10 +63,17 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ place, distance, onClose }) =
         )}
         
         <div className="action-grid">
-          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="action-btn primary" style={{ textDecoration: 'none' }}>
-            <Navigation size={20} />
-            <span>Directions</span>
-          </a>
+          {place.category === 'event' && place.externalUrl ? (
+            <a href={place.externalUrl} target="_blank" rel="noopener noreferrer" className="action-btn primary" style={{ textDecoration: 'none', background: 'var(--color-warning)', color: 'var(--color-primary-dark)' }}>
+              <Globe size={20} />
+              <span>Tickets / Info</span>
+            </a>
+          ) : (
+            <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="action-btn primary" style={{ textDecoration: 'none' }}>
+              <Navigation size={20} />
+              <span>Directions</span>
+            </a>
+          )}
           <button className="action-btn secondary">
             <Bookmark size={20} />
             <span>Save</span>

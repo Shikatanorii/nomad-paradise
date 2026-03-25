@@ -10,6 +10,8 @@ export interface Place {
   reviews?: number;
   address: string;
   tags?: string[];
+  externalUrl?: string; // Bounding native event URLs bypassing map routes
+  date?: string; // Structured absolute timeline metric
 }
 
 export const mockPlaces: Place[] = [

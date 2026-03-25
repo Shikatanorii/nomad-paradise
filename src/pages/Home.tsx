@@ -10,6 +10,7 @@ import { geocodeLocation } from '../lib/geocoder';
 import type { GeocodeResult } from '../lib/geocoder';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { calculateDistance } from '../utils/haversine';
+import { useEvents } from '../hooks/useEvents';
 import './Home.css';
 
 const AVAILABLE_TAGS = ['24/7', 'Safe Overnight', 'Bathrooms', 'Free', 'Hot Showers', 'Fast Wi-Fi'];
@@ -33,6 +34,9 @@ const Home: React.FC = () => {
 
   // Math & Device Telemetry
   const { location, geoError, isLocating, requestLocation, setGeoError } = useGeolocation();
+
+  const isEventsActive = activeCategory === 'event';
+  const { events: liveEvents, isLoading: isEventsLoading } = useEvents(mapCenter.lat, mapCenter.lng, isEventsActive);
 
   useEffect(() => {
     if (isSupabaseConfigured() && supabase) {
@@ -107,7 +111,7 @@ const Home: React.FC = () => {
   };
 
   const filteredPlaces = useMemo(() => {
-    let currentPlaces = places;
+    let currentPlaces = [...places, ...liveEvents];
     if (activeCategory !== 'all') {
       currentPlaces = currentPlaces.filter(p => p.category === activeCategory);
     }
@@ -295,7 +299,11 @@ const Home: React.FC = () => {
           className={`filter-pill shadow-sm glass ${activeCategory === 'event' ? 'active' : ''}`}
           onClick={() => setActiveCategory('event')}
         >
-          Events
+          {activeCategory === 'event' && isEventsLoading ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Loader2 size={14} className="spinner" /> Fetching...
+            </span>
+          ) : 'Events'}
         </button>
       </div>
 
