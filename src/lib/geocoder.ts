@@ -5,11 +5,11 @@ export interface GeocodeResult {
 }
 
 // In-memory cache to strictly prevent duplicate identical requests to Nominatim
-const geocodeCache: Record<string, GeocodeResult | null> = {};
+const geocodeCache: Record<string, GeocodeResult[] | null> = {};
 
 // 100% Free, privacy-safe Geocoding via OpenStreetMap. No API keys.
 // COMPLIANCE: This must ONLY be fired on explicit user action (e.g. Enter key), NEVER on typeahead.
-export async function geocodeLocation(query: string): Promise<GeocodeResult | null> {
+export async function geocodeLocation(query: string): Promise<GeocodeResult[] | null> {
   const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery || normalizedQuery.length < 3) return null;
   
@@ -19,12 +19,10 @@ export async function geocodeLocation(query: string): Promise<GeocodeResult | nu
   }
   
   try {
-    // Note: Browsers block custom User-Agent headers in fetch(). 
-    // Nominatim relies on the Origin/Referer header natively sent by the browser.
     const url = new URL('https://nominatim.openstreetmap.org/search');
     url.searchParams.append('format', 'json');
     url.searchParams.append('q', normalizedQuery);
-    url.searchParams.append('limit', '1');
+    url.searchParams.append('limit', '5'); // Broadened to support Patch 1.3 selection UX
 
     const res = await fetch(url.toString(), {
       headers: {
@@ -36,21 +34,19 @@ export async function geocodeLocation(query: string): Promise<GeocodeResult | nu
     
     const data = await res.json();
     if (data && data.length > 0) {
-      const result = {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon),
-        displayName: data[0].display_name
-      };
-      geocodeCache[normalizedQuery] = result;
-      return result;
+      const results = data.map((item: any) => ({
+        lat: parseFloat(item.lat),
+        lng: parseFloat(item.lon),
+        displayName: item.display_name
+      }));
+      geocodeCache[normalizedQuery] = results;
+      return results;
     } else {
-      // Cache nulls to prevent identical empty searches from hitting API again
       geocodeCache[normalizedQuery] = null;
       return null;
     }
   } catch (error) {
     console.error("Geocoding retrieval failed:", error);
-    // Do NOT cache network errors so the user can cleanly retry later
     throw error;
   }
 }

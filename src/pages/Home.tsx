@@ -7,6 +7,7 @@ import { mockPlaces } from '../data/mockPlaces';
 import type { PlaceCategory, Place } from '../data/mockPlaces';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { geocodeLocation } from '../lib/geocoder';
+import type { GeocodeResult } from '../lib/geocoder';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -20,6 +21,10 @@ const Home: React.FC = () => {
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number}>({lat: 39.7392, lng: -104.9903});
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  
+  // Selection UX States
+  const [searchResults, setSearchResults] = useState<GeocodeResult[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     if (isSupabaseConfigured() && supabase) {
@@ -48,6 +53,7 @@ const Home: React.FC = () => {
     if (query.length < 3) return;
 
     setSearchError(null);
+    setShowDropdown(false);
 
     // 1. Direct Local Match Optimization
     const localMatch = places.find(p => p.name.toLowerCase().includes(query.toLowerCase()));
@@ -60,8 +66,16 @@ const Home: React.FC = () => {
     setIsGeocoding(true);
     try {
       const res = await geocodeLocation(query);
-      if (res) {
-        setMapCenter({ lat: res.lat, lng: res.lng });
+      if (res && res.length > 0) {
+        if (res.length === 1) {
+          // Jump immediately if only one true match globally exists
+          setMapCenter({ lat: res[0].lat, lng: res[0].lng });
+          setSearchQuery(res[0].displayName.split(',')[0]);
+        } else {
+          // Display the newly fetched options array for user selection
+          setSearchResults(res);
+          setShowDropdown(true);
+        }
       } else {
         setSearchError('No places found. Try a different city.');
       }
@@ -70,6 +84,12 @@ const Home: React.FC = () => {
     } finally {
       setIsGeocoding(false);
     }
+  };
+
+  const handleSelectResult = (result: GeocodeResult) => {
+    setMapCenter({ lat: result.lat, lng: result.lng });
+    setSearchQuery(result.displayName.split(',')[0]); // Clean user query down to city name
+    setShowDropdown(false);
   };
 
   const filteredPlaces = useMemo(() => {
@@ -117,6 +137,17 @@ const Home: React.FC = () => {
               </button>
             )}
           </form>
+          
+          {showDropdown && searchResults.length > 0 && (
+            <div className="search-dropdown slide-down shadow-sm glass">
+              {searchResults.map((res, i) => (
+                <div key={i} className="search-dropdown-item" onClick={() => handleSelectResult(res)}>
+                  {res.displayName}
+                </div>
+              ))}
+            </div>
+          )}
+
           {searchError && (
             <div className="search-error-toast slide-down">
               {searchError}

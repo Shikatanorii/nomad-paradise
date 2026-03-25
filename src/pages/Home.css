@@ -199,4 +199,36 @@
   width: 100%;
 }
 
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  overflow: hidden;
+  z-index: 1001;
+}
+
+.search-dropdown-item {
+  padding: 0.8rem 1rem;
+  font-size: 0.85rem;
+  color: var(--color-text-main);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.search-dropdown-item:hover {
+  background: rgba(118, 169, 139, 0.15);
+}
+
 /* Base Filter Bar */
