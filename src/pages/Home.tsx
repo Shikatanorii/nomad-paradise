@@ -6,7 +6,6 @@ import AdZone from '../components/AdZone/AdZone';
 import { mockPlaces } from '../data/mockPlaces';
 import type { PlaceCategory, Place } from '../data/mockPlaces';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { useDebounce } from '../hooks/useDebounce';
 import { geocodeLocation } from '../lib/geocoder';
 import './Home.css';
 
@@ -20,7 +19,7 @@ const Home: React.FC = () => {
   // Geocoding States
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number}>({lat: 39.7392, lng: -104.9903});
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const debouncedSearch = useDebounce(searchQuery, 800);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isSupabaseConfigured() && supabase) {
@@ -42,28 +41,36 @@ const Home: React.FC = () => {
     }
   }, []);
 
-  // Handle Global Geocoding OR Local Map Jump
-  useEffect(() => {
-    if (debouncedSearch.trim().length >= 3) {
-      // 1. Direct Local Tag/Name Match Jump
-      const localMatch = places.find(p => p.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
-      if (localMatch) {
-         setMapCenter({ lat: Number(localMatch.lat), lng: Number(localMatch.lng) });
-         return;
-      }
-      
-      // 2. Global Nominatim Search
-      const runGeocode = async () => {
-        setIsGeocoding(true);
-        const res = await geocodeLocation(debouncedSearch);
-        if (res) {
-          setMapCenter({ lat: res.lat, lng: res.lng });
-        }
-        setIsGeocoding(false);
-      };
-      runGeocode();
+  // Explicit Global Search Submit handler (Provider Compliant)
+  const handleSearchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (query.length < 3) return;
+
+    setSearchError(null);
+
+    // 1. Direct Local Match Optimization
+    const localMatch = places.find(p => p.name.toLowerCase().includes(query.toLowerCase()));
+    if (localMatch) {
+       setMapCenter({ lat: Number(localMatch.lat), lng: Number(localMatch.lng) });
+       return;
     }
-  }, [debouncedSearch, places]);
+
+    // 2. Global API Search
+    setIsGeocoding(true);
+    try {
+      const res = await geocodeLocation(query);
+      if (res) {
+        setMapCenter({ lat: res.lat, lng: res.lng });
+      } else {
+        setSearchError('No places found. Try a different city.');
+      }
+    } catch (err) {
+      setSearchError('Search service unavailable. Please try again.');
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
 
   const filteredPlaces = useMemo(() => {
     let currentPlaces = places;
@@ -89,18 +96,32 @@ const Home: React.FC = () => {
       </div>
       
       {/* Floating Header Actions */}
-      <header className="home-header">
-          <div className="search-container shadow-sm" style={{ position: 'relative' }}>
+      <header className="home-header" style={{ flexDirection: 'column' }}>
+          <form className="search-container shadow-sm" style={{ position: 'relative' }} onSubmit={handleSearchSubmit}>
             <input 
               type="text" 
               className="search-input" 
               placeholder="Search places, cities..." 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (searchError) setSearchError(null); // Clear error on typing
+              }}
               aria-label="Search places and events"
             />
-            {isGeocoding && <Loader2 className="search-loader spinner" size={18} />}
-          </div>
+            {isGeocoding ? (
+              <Loader2 className="search-loader spinner" size={18} />
+            ) : (
+              <button type="submit" className="search-button" aria-label="Submit search">
+                 <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Go</span>
+              </button>
+            )}
+          </form>
+          {searchError && (
+            <div className="search-error-toast slide-down">
+              {searchError}
+            </div>
+          )}
       </header>
 
       {/* Premium Data Status Pill */}
