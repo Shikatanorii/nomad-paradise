@@ -1,0 +1,50 @@
+.map-hub-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.leaflet-map {
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Keep map below absolute UI overlays like filter pills */
+}
+
+/* Grayscale map to align with modern aesthetic, or keep colorful. 
+   A subtle filter makes overlays pop better. */
+.map-tiles {
+  filter: saturate(0.8) contrast(1.1) brightness(1.05); /* Modern slightly muted look */
+}
+
+/* Customizing the Leaflet Popup to match our design system */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.custom-popup .popup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.custom-popup .popup-content strong {
+  color: var(--color-text-main);
+  font-size: 0.9rem;
+}
+
+.custom-popup .popup-content span {
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 500;
+}

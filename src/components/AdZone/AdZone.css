@@ -1,0 +1,37 @@
+.ad-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.ad-wrapper.banner-bottom {
+  height: 50px;
+  background: var(--color-bg);
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.ad-wrapper.inline-feed {
+  height: 250px;
+  background: #f1f5f9;
+  border-radius: var(--radius-md);
+  margin: var(--spacing-md) 0;
+}
+
+/* Placeholder styles during development */
+.ad-placeholder {
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+}
+
+.ad-label {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Only hide if we explicitly don't want placeholders in production */
+.ad-hide {
+  display: none !important;
+}
