@@ -28,16 +28,16 @@ export function useGeolocation() {
         setIsLocating(false);
         switch(err.code) {
           case err.PERMISSION_DENIED:
-            setGeoError('Location permission securely denied. Defaulting to manual search.');
+            setGeoError('Location permission denied. Distances will not cleanly render.');
             break;
           case err.POSITION_UNAVAILABLE:
-            setGeoError('Hardware location telemetry currently unavailable.');
+            setGeoError('Location unavailable on this specific hardware.');
             break;
           case err.TIMEOUT:
-            setGeoError('The location telemetry request timed out.');
+            setGeoError('The location request mathematically timed out. Please try again.');
             break;
           default:
-            setGeoError('An unknown GPS error securely occurred.');
+            setGeoError('An unknown location algorithm error occurred.');
             break;
         }
       },
