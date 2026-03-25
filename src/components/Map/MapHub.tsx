@@ -28,7 +28,7 @@ interface MapHubProps {
 const MapController: React.FC<{ center: [number, number] }> = ({ center }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, map.getZoom());
+    map.flyTo(center, 12, { animate: true, duration: 1.5 });
   }, [center, map]);
   return null;
 };

@@ -1,10 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import MapHub from '../components/Map/MapHub';
 import BottomSheet from '../components/BottomSheet/BottomSheet';
 import AdZone from '../components/AdZone/AdZone';
 import { mockPlaces } from '../data/mockPlaces';
 import type { PlaceCategory, Place } from '../data/mockPlaces';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { useDebounce } from '../hooks/useDebounce';
+import { geocodeLocation } from '../lib/geocoder';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -13,6 +16,11 @@ const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [places, setPlaces] = useState<Place[]>(mockPlaces);
   const [isLoadingDB, setIsLoadingDB] = useState(isSupabaseConfigured());
+  
+  // Geocoding States
+  const [mapCenter, setMapCenter] = useState<{lat: number, lng: number}>({lat: 39.7392, lng: -104.9903});
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 800);
 
   useEffect(() => {
     if (isSupabaseConfigured() && supabase) {
@@ -34,6 +42,29 @@ const Home: React.FC = () => {
     }
   }, []);
 
+  // Handle Global Geocoding OR Local Map Jump
+  useEffect(() => {
+    if (debouncedSearch.trim().length >= 3) {
+      // 1. Direct Local Tag/Name Match Jump
+      const localMatch = places.find(p => p.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
+      if (localMatch) {
+         setMapCenter({ lat: Number(localMatch.lat), lng: Number(localMatch.lng) });
+         return;
+      }
+      
+      // 2. Global Nominatim Search
+      const runGeocode = async () => {
+        setIsGeocoding(true);
+        const res = await geocodeLocation(debouncedSearch);
+        if (res) {
+          setMapCenter({ lat: res.lat, lng: res.lng });
+        }
+        setIsGeocoding(false);
+      };
+      runGeocode();
+    }
+  }, [debouncedSearch, places]);
+
   const filteredPlaces = useMemo(() => {
     let currentPlaces = places;
     if (activeCategory !== 'all') {
@@ -51,21 +82,25 @@ const Home: React.FC = () => {
       <div className="map-placeholder">
         <MapHub 
           places={filteredPlaces} 
-          onMarkerClick={selectedPlace => setSelectedPlace(selectedPlace)} 
+          centerLat={mapCenter.lat}
+          centerLng={mapCenter.lng}
+          onMarkerClick={setSelectedPlace} 
         />
       </div>
       
       {/* Floating Header Actions */}
       <header className="home-header">
-        <div className="search-bar shadow-sm glass">
-          <input 
-            type="text" 
-            placeholder="Search places, events..." 
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            aria-label="Search places and events"
-          />
-        </div>
+          <div className="search-container shadow-sm" style={{ position: 'relative' }}>
+            <input 
+              type="text" 
+              className="search-input" 
+              placeholder="Search places, cities..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search places and events"
+            />
+            {isGeocoding && <Loader2 className="search-loader spinner" size={18} />}
+          </div>
       </header>
 
       {/* Premium Data Status Pill */}
