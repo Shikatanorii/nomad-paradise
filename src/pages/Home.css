@@ -131,9 +131,10 @@
 
 .data-status-pill {
   position: absolute;
-  top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
+  top: auto;
+  bottom: 1.5rem;
+  left: 1rem;
+  transform: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -144,8 +145,7 @@
   border-radius: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  z-index: 1000; /* Above map, below header eventually if fixed */
-  margin-top: calc(env(safe-area-inset-top, 0px) + 70px); /* Push below search bar */
+  z-index: 1000;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-light);
@@ -187,10 +187,8 @@
 
 @media (min-width: 768px) {
   .data-status-pill {
-    /* Different positioning for desktop map view */
-    left: 20px;
-    transform: none;
-    margin-top: 90px;
+    left: 1.5rem;
+    bottom: 2rem;
   }
 }
 .legal-link {
