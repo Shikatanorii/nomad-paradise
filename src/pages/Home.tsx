@@ -1,27 +1,50 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import MapHub from '../components/Map/MapHub';
 import BottomSheet from '../components/BottomSheet/BottomSheet';
 import AdZone from '../components/AdZone/AdZone';
 import { mockPlaces } from '../data/mockPlaces';
 import type { PlaceCategory, Place } from '../data/mockPlaces';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import './Home.css';
 
 const Home: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<PlaceCategory | 'all'>('all');
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [places, setPlaces] = useState<Place[]>(mockPlaces);
+  const [isLoadingDB, setIsLoadingDB] = useState(isSupabaseConfigured());
+
+  useEffect(() => {
+    if (isSupabaseConfigured() && supabase) {
+      const fetchPlaces = async () => {
+        try {
+          const { data, error } = await supabase!.from('places').select('*');
+          if (error) throw error;
+          if (data && data.length > 0) {
+            setPlaces(data as unknown as Place[]);
+          }
+        } catch (err) {
+          console.error("Supabase fetch failed, falling back to mock:", err);
+          setPlaces(mockPlaces);
+        } finally {
+          setIsLoadingDB(false);
+        }
+      };
+      fetchPlaces();
+    }
+  }, []);
 
   const filteredPlaces = useMemo(() => {
-    let places = mockPlaces;
+    let currentPlaces = places;
     if (activeCategory !== 'all') {
-      places = places.filter(p => p.category === activeCategory);
+      currentPlaces = currentPlaces.filter(p => p.category === activeCategory);
     }
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase();
-      places = places.filter(p => p.name.toLowerCase().includes(q) || p.tags?.some(t => t.toLowerCase().includes(q)));
+      currentPlaces = currentPlaces.filter(p => p.name.toLowerCase().includes(q) || p.tags?.some(t => t.toLowerCase().includes(q)));
     }
-    return places;
-  }, [activeCategory, searchQuery]);
+    return currentPlaces;
+  }, [activeCategory, searchQuery, places]);
 
   return (
     <div className="home-container">
@@ -46,9 +69,11 @@ const Home: React.FC = () => {
       </header>
 
       {/* Honest Mock Data Banner */}
-      <div className="mock-banner shadow-sm slide-down">
-        <span>Demo Build: Displaying Sample Data</span>
-        <a href="/legal" className="legal-link">Legal / Disclaimers</a>
+      <div className="mock-banner shadow-sm slide-down" style={{ background: isSupabaseConfigured() ? 'var(--color-success)' : 'var(--color-warning)' }}>
+        <span>
+          {isLoadingDB ? 'Loading Live Data...' : isSupabaseConfigured() ? 'Live Demo: Database Connected' : 'Demo Build: Displaying Sample Data'}
+        </span>
+        <a href="/legal" className="legal-link" style={{ color: isSupabaseConfigured() ? '#fff' : 'var(--color-primary-dark)' }}>Legal / Disclaimers</a>
       </div>
 
       {/* Filter Pills */}
