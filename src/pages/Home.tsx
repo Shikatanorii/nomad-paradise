@@ -12,7 +12,7 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { calculateDistance } from '../utils/haversine';
 import './Home.css';
 
-const AVAILABLE_TAGS = ['24/7', 'Free WiFi', 'Safe Overnight', 'Cheap', 'Rest Stop'];
+const AVAILABLE_TAGS = ['24/7', 'Safe Overnight', 'Bathrooms', 'Free', 'Hot Showers', 'Fast Wi-Fi'];
 
 const Home: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<PlaceCategory | 'all'>('all');
@@ -170,6 +170,24 @@ const Home: React.FC = () => {
         >
           {isLocating ? <Loader2 className="spinner" size={20} /> : <LocateFixed size={20} />}
         </button>
+
+        {/* Empty State Overlay */}
+        {filteredPlaces.length === 0 && (
+          <div className="empty-state-overlay slide-down" style={{
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            background: 'rgba(255, 255, 255, 0.95)', padding: '1.5rem', borderRadius: '16px',
+            textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', zIndex: 999,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', width: '85%', maxWidth: '300px',
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)'
+          }}>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-primary-dark)' }}>No Places Found</h3>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>We couldn't find any trusted locations matching your exact constraints.</p>
+            <button onClick={() => { setActiveTags([]); setActiveCategory('all'); setSearchQuery(''); }} style={{
+              background: 'var(--color-primary)', color: 'white', border: 'none', padding: '0.5rem 1rem',
+              borderRadius: '20px', fontWeight: 600, cursor: 'pointer', marginTop: '0.5rem', transition: 'all 0.2s ease'
+            }}>Clear Map Filters</button>
+          </div>
+        )}
       </div>
       
       {/* Floating Header Actions */}
@@ -283,6 +301,15 @@ const Home: React.FC = () => {
 
       {/* Secondary Tag Filters */}
       <div className="tag-filter-container slide-down" aria-label="Utility Presets">
+        {activeTags.length > 0 && (
+          <button
+            className="secondary-pill shadow-sm"
+            onClick={() => setActiveTags([])}
+            style={{ color: '#d32f2f', borderColor: 'rgba(211, 47, 47, 0.3)', fontWeight: 700 }}
+          >
+            ✕ Reset
+          </button>
+        )}
         {AVAILABLE_TAGS.map(tag => (
           <button
             key={tag}
